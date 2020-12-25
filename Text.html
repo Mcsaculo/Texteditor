@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+	<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+	<title>Title</title>
+	<style>
+		.title{
+		
+		}
+		.gliederung{
+		
+		}
+		.abk{
+			
+		}
+		.abbildunsgverzeichnis{
+		
+		
+		}
+		.grafik{
+		
+		}
+		.tabelle{
+		
+		}
+		.kopfzeile{
+			 padding:0px;
+             margin:0px;
+			 wrap:no-wrap;
+             box-sizing: border-box;
+			 text-align: left;
+		}
+		.kopfzeile_proto{
+			 padding:0px;
+             margin:0px;
+			 wrap:no-wrap;
+             box-sizing: border-box;
+			 text-align: left;
+		}
+		
+		.fußzeile{
+			 padding:0px;
+             margin:0px;
+			 text-align: right;
+			 vertical-align: middle;
+             box-sizing: border-box;
+		}
+		.absatz{
+			display: block; /* makes it have a width */
+			box-sizing: border-box;
+			height:20cm;
+		}
+		.seite_proto{
+			display: flex;
+			wrap:no-wrap;
+			justify-content : flex-start;
+			align-items : stretch;
+			box-sizing: border-box;
+		}
+		.seite_bulk{
+			display: flex;
+			wrap:no-wrap;
+			justify-content : flex-start;
+			align-items : stretch;
+			box-sizing: border-box;
+		}
+		.seite{
+			width:17.88cm;
+			height: 29.7cm;
+			background-color: #179c7d;
+			box-sizing: border-box;
+		}
+		.seitenrand_links{
+			width:2.41cm;
+			height: 29.7cm;
+			box-sizing: border-box;
+			background-color: gray;
+		}
+		.seitenrand_rechts{
+			width:0.81cm;
+			height: 29.7cm;
+			box-sizing: border-box;
+			background-color: gray;
+		}
+	</style>
+</head>
+<body>
+	<div class="Test">1.2 Irgendwas</div>
+	<div class="kopfzeile_proto">
+		<div class="kopfzeile_text">Aha</div>
+		<div class="strich" style="height:1px;border-width:0;color:black;background-color:black"></div>
+	</div>
+	<div class="fußzeile">1</div>
+	<div class="seite_proto">
+		<div class="seitenrand_links"></div>
+		<div class="seite">Test</div>
+		<div class="seitenrand_rechts"></div>
+	</div>
+	<div class="text_bulk">
+		<h2 class="kapitel">TestH2</h2>
+		<div class="absatz"></div>
+		<h2 class="kapitel">TestH22</h2>
+		<div class="absatz"></div>
+		<div class="absatz"></div>
+		<div>Test usw.</div>
+	</div>
+	
+</body>
+<script>
+	var size_s=[];
+	function sleep(milliseconds) {
+		const date = Date.now();
+		let currentDate = null;
+		do {
+			currentDate = Date.now();
+		} while (currentDate - date < milliseconds);
+	}
+
+	function checkOverflow(el){
+		var curOverflow = el.style.overflow;
+		if ( !curOverflow || curOverflow === "visible" ){
+			el.style.overflow = "hidden";}
+		var isOverflowing=[0,0];
+		if(el.clientWidth < el.scrollWidth){
+			isOverflowing[0]=1;
+		}
+		if (el.clientHeight < el.scrollHeight){
+			isOverflowing[1]=1;
+		}
+		el.style.overflow = curOverflow;
+		return isOverflowing;
+	}
+	function find_overflow(){
+		liste=$(".seite");
+		for( var k=0; k<liste.length;k++){
+			console.log(checkOverflow(liste[k]));
+		}
+	}
+	function kopfzeilen_modify(tag1){
+		var liste_all=$("body *");
+		var liste_kopfzeilen=[];
+		var liste_kapitel=[];
+		for(var k=0; k<liste_all.length;k++){
+			if(liste_all[k].classList.contains("kapitel")){
+				liste_kapitel.push(k);
+			}else if(liste_all[k].classList.contains("kopfzeile_text")){
+				liste_kopfzeilen.push(k);
+			}
+		}
+		console.log(liste_kopfzeilen);
+		if(!liste_kapitel){
+			return;
+		}
+		for(var k=0; k<liste_kopfzeilen.length;k++){
+			if(k==0 && liste_kopfzeilen[0]<liste_kapitel[0]){
+					liste_all[liste_kopfzeilen[k]].innerText="";
+			}
+			for( var l=0; l<liste_kapitel.length;l++){
+					if(l<k){
+						liste_all[liste_kopfzeilen[k]].innerText=liste_all[liste_kapitel[l]].innerText;
+					}
+			}
+		}
+		
+	}
+	function count_el(klasse){
+		var liste= $(klasse);
+		return [liste,liste.length];
+	}
+	function set_seitennummer(){
+		ar=count_el(".fußzeile");
+		for(var k=0; k< ar[1];k++){
+			ar[0][k].innerText=k+1;
+		}
+	}
+	function make_pages(seite_h){
+		var hoehe_seite=(seite_h/0.026458); //vgl. 96 dpi 2.54 cm pro inch)
+		//console.log(window.devicePixelRatio);
+		//console.log(hoehe_seite);
+		var tags=["br", "img"];
+		var el=$(".text_bulk *");
+		var cnt_h=0;
+		var liste_el=[];
+		for (var k=0; k< el.length;k++){
+			cnt_h+=el[k].scrollHeight;
+			if (cnt_h>hoehe_seite || ){
+				liste_el.push(k-1);
+				cnt_h=el[k].scrollHeight;
+			}
+		}
+		liste_el.push(el.length-1);
+		var start_v=0;
+		for (var k=0; k< liste_el.length;k++){
+			$(".kopfzeile_proto").clone(true,true).appendTo($("body")).removeClass("kopfzeile_proto").addClass("kopfzeile");
+			$kopf_h=$(".kopfzeile_text").last();
+			console.log($kopf_h.closest(".kapitel"));
+		    $kopf_h.text($kopf_h.closest(".Test").text());
+			$seite1=$(".seite_proto").clone(true,true).appendTo($("body")).removeClass("seite_proto").addClass("seite_bulk");
+			$seite1[0].style.display="flex";
+			$(".fußzeile:first").clone(true,true).appendTo($("body"));
+			var zw="";
+			for (var l=start_v; l<=liste_el[k]; l++){
+				zw+=el[l].outerHTML;
+			}
+			var s1=$seite1.find(".seite")
+			s1[0].innerHTML=zw;
+			start_v=liste_el[k]+1;
+		}
+		//$(".kopfzeile:first").remove();
+		$(".fußzeile:first").remove();
+		$(".seite_proto")[0].remove();
+		$(".text_bulk").remove();
+		set_seitennummer();
+		kopfzeilen_modify("");
+		}
+	make_pages(29.7);
+	//set_seitennummer();
+	//kopfzeilen_modify(".Test");
+	find_overflow();
+	
+	//$(document).ready(function(){
+	//	($("*").each(function(i){return this.style.color="green"}))});
+	liste=$("div");
+	var hoehenzaehler=0;
+	console.log(liste);
+	for (var k=0; k<liste.length;k++){
+		console.log(liste[k].style.getPropertyValue("height"));
+		hoehenzaehler+=liste[k].style.getPropertyValue("height");
+	}
+	var cln = liste[0].cloneNode(true);
+	//document.body.appendChild(cln); 
+	console.log(hoehenzaehler);
+</script>
